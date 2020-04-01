@@ -3,20 +3,21 @@ const axios = require('axios');
 const CryptoJS = require("crypto-js");
 const { join } = require('path');
 const request = require('request');
+const myToken = require('./myToken');
 
 const getDataOnApi = () => {
-  axios.get('https://api.codenation.dev/v1/challenge/dev-ps/generate-data?token=e45eae295159eccf2d4eba1e957791ff4fce31a1')
+  axios.get(`https://api.codenation.dev/v1/challenge/dev-ps/generate-data?token=${myToken}`)
     .then(response => {
       const messageDecode = cipherDecode(response.data.cifrado, response.data.numero_casas)
       response.data.decifrado = messageDecode;
       response.data.resumo_criptografico = CryptoJS.SHA1(messageDecode).toString();
       fs.writeFile('answer.json', JSON.stringify(response.data, null, 2), () => {
         console.log('Saved!');      
+      });
     })
-  })
-  .catch(error => {
-    throw error
-  });
+    .catch(error => {
+      throw error
+    });
 }
 
 
@@ -41,24 +42,27 @@ const cipherDecode = (text, key) => {
   return cipher
 }
 
-getDataOnApi() 
-
-const answer = fs.createReadStream(join(__dirname, 'answer.json'));
-request(
-  {
+const sendDataToApi = () => {
+  const answer = fs.createReadStream(join(__dirname, 'answer.json'));
+  request(
+    {
       method: 'POST',
-      url: 'https://api.codenation.dev/v1/challenge/dev-ps/submit-solution?token=e45eae295159eccf2d4eba1e957791ff4fce31a1',
+      url: `https://api.codenation.dev/v1/challenge/dev-ps/submit-solution?token=${myToken}`,
       headers: {
-          'Content-Type': 'multipart/form-data'
+        'Content-Type': 'multipart/form-data'
       },
       formData: {
-          answer: answer
+        answer: answer
       }
-  },
-  (err, res, body) => {
-    if (err) {
+    },
+    (err, res, body) => {
+      if (err) {
         console.log(err);
+      }
+      console.log(body);
     }
-    console.log(body);
-  }
-);
+  );
+}
+
+getDataOnApi()
+sendDataToApi()
