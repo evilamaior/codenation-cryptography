@@ -1,16 +1,25 @@
-function getDataOnApi() {
-  fetch('https://api.codenation.dev/v1/challenge/dev-ps/generate-data?token=e45eae295159eccf2d4eba1e957791ff4fce31a1')
-    .then(response => response.json())
-    .then(myJson => { 
-      console.log(myJson)
-      const messageDecode = cipherDecode(myJson.cifrado, myJson.numero_casas)
-      console.log(messageDecode)
+const fs = require('fs');
+const axios = require('axios');
+// const CryptoJS = require("crypto-js");
+const { join } = require('path');
+const request = require('request');
+
+const getDataOnApi = () => {
+  axios.get('https://api.codenation.dev/v1/challenge/dev-ps/generate-data?token=e45eae295159eccf2d4eba1e957791ff4fce31a1')
+    .then(response => {
+      // const messageDecode = cipherDecode(response.data.cifrado, response.data.numero_casas)
+      // CryptoJS.SHA1(messageDecode).toString();
+      fs.writeFile('answer.json', JSON.stringify(response.data), null, 2);      
+        console.log(salved);
     })
+    .catch(error => {
+      throw error
+      console.log(error);
+    });
 }
 
-getDataOnApi() 
 
-function cipherDecode(text, key){
+const cipherDecode = (text, key) => {
   let decodeArray = [];
   let cipher = "";
   let cipherCount = "";
@@ -31,4 +40,18 @@ function cipherDecode(text, key){
   return cipher
 }
 
-cipherDecode();
+getDataOnApi() 
+
+const answer = fs.createReadStream(join(__dirname, 'answer.json'));
+request(
+  {
+      method: 'POST',
+      url: 'https://api.codenation.dev/v1/challenge/dev-ps/submit-solution?token=e45eae295159eccf2d4eba1e957791ff4fce31a1',
+      headers: {
+          'Content-Type': 'multipart/form-data'
+      },
+      formData: {
+          answer: answer
+      }
+  }
+);
