@@ -1,21 +1,22 @@
 const fs = require('fs');
 const axios = require('axios');
-// const CryptoJS = require("crypto-js");
+const CryptoJS = require("crypto-js");
 const { join } = require('path');
 const request = require('request');
 
 const getDataOnApi = () => {
   axios.get('https://api.codenation.dev/v1/challenge/dev-ps/generate-data?token=e45eae295159eccf2d4eba1e957791ff4fce31a1')
     .then(response => {
-      // const messageDecode = cipherDecode(response.data.cifrado, response.data.numero_casas)
-      // CryptoJS.SHA1(messageDecode).toString();
-      fs.writeFile('answer.json', JSON.stringify(response.data), null, 2);      
-        console.log(salved);
+      const messageDecode = cipherDecode(response.data.cifrado, response.data.numero_casas)
+      response.data.decifrado = messageDecode;
+      response.data.resumo_criptografico = CryptoJS.SHA1(messageDecode).toString();
+      fs.writeFile('answer.json', JSON.stringify(response.data, null, 2), () => {
+        console.log('Saved!');      
     })
-    .catch(error => {
-      throw error
-      console.log(error);
-    });
+  })
+  .catch(error => {
+    throw error
+  });
 }
 
 
@@ -53,5 +54,11 @@ request(
       formData: {
           answer: answer
       }
+  },
+  (err, res, body) => {
+    if (err) {
+        console.log(err);
+    }
+    console.log(body);
   }
 );
